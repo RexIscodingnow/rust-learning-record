@@ -252,5 +252,18 @@ Rust 學習
                              13 |    // i 代表 圈數  j 代表 輸出數值 
                              14 |    println!("i = {}, j = {}", i, j);
                              15 | }
+            
+            6-3-2. for 迴圈 與 數組 之操作結合
+                        示例: 印數組 nums 之所有元素
+                              1 | // 宣告數組
+                              2 | let nums = [10, 20, 30, 40, 50, 60];
+                              3 | 
+                              4 | for element in nums.iter() {
+                              5 |    println!("{}", element);
+                              6 | }
+                        
+                        說明: nums.iter() 的 iter() 方法
 
+                                在 nums 數組下，iter() 方法，是屬於 "疊代器"
+                                for 迴圈的循(淫)環(威)之下，則會依序從 iter() 取出 nums 的每一個值
 
