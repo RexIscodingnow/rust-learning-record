@@ -1,6 +1,12 @@
-// use std::io::stdin;
+// 預導入 (preiude)
+use std::io::stdin;
+// use std::cmp::Ordering;
+// use rand::Rng;
 
 // const MAX_POINTS: u32 = 100_000;   // 常數
+
+mod if_statement;
+mod loop_statement;   // 導入 .rs 檔案
 
 fn main() {
     // println!("Hello, world!");
@@ -79,5 +85,65 @@ fn main() {
     
     // println!("{}", a[4]);   // 超過索引值範圍，不會抱錯
 
+    // if statement
+    // let is_bigger = if_statement::general(0, 5, 8);
+    // println!("{}", is_bigger);
+
+    // if_statement::score_status();
+
+    // 迴圈
+    /* 1. loop */
+    // loop_statement::loop_example();
+
+    /* 2. while */
+    // loop_statement::while_loop();
+
+    /* 3. for */
+    // loop_statement::for_loop();
+
+    
+    /* 4. String */
+    // let mut str = String::from("hello");
+    // str.push_str(", world");
+    // println!("{}", str);
+
+    // let s1 = String::from(" hello");
+    // let s2 = s1;
+    // println!("{}", s2);
+
+    // let str1 = "hello";
+    // let str2 = str1;
+    // println!("str1: {}, str2: {}", str1, str2);
+
+    // println!("{}", add(12, 56));
+    // let age: u8 = 12;
+    // println!("Is adult {}", is_adult(age));
+    
+    // 函式指標
+    // let fn_ptr = function_ptr;
+    // println!("Function Pointer: {}", fn_ptr(50));
+    // diverges();
     
 }
+
+// fn add(x: i32, y: i32) -> i32 {
+//     x + y
+// }
+
+// fn is_adult(age: u8) -> bool {
+//     if age >= 18 {
+//         return true;
+//     }
+//     else {
+//         return false;
+//     }
+// }
+
+// fn diverges() -> ! {
+//     panic!("這函式不回傳值");
+// }
+
+// fn function_ptr(number: i32) -> i32 {
+//     number * 2
+// }
+
