@@ -165,6 +165,10 @@
                         
                         ** 把 s1 的資料複製到 s2，由於 s1 離開 scope，因此該變數也就視為無效 **
                 
+                總結: 在是否會發生所有權轉移(Move) 的時候，要看該變數是不是為 Copy trait，
+                        若不是 Copy trait 而會轉移該變數的所有權
+
+
                 2. 這裡有兩個專有名詞，有關於 Copy 的部分
 
                         2-1. 淺複製 / 淺拷貝 (shallow Copy)
@@ -186,5 +190,180 @@
                         2 | let s2 = s1.clone();
                         3 | println!("s1: {}, s2: {}", s1, s2);
 
+    5-6. Stack 上的資料: 複製
+            
+            5-6-1. Copy trait: 可以用於像是整數資料，完全存放在 Stack 上面
+            5-6-2. 如果某一個資料實現了 Copy 這個 trait，那麼舊變數的資料在賦值後，仍然可以繼續使用
+            5-6-3. 如果某一個資料或是該資料的一部分，實現了 Drop trait，
+                        那麼 Rust 則不允許讓它實現 Copy trait
+            
+    5-7. 一些擁有 Copy trait 的資料型態
+            
+            5-7-1. 任何簡單的組合資料型態，是可以 Copy 的
+            5-7-2. 任何需要分配內存，或某些資源的都不是 Copy
+            5-7-3. 一些擁有 Copy trait 的資料型態
+                        1. 所有的整數型別: i32, u32
+                        2. 布林值: bool
+                        3. 字元: char
+                        4. 所有的浮點數型別: f64
+                        5. 元組 (Tuple)，如果 Tuple 內的資料都是 Copy 的
+                                -- (i32, i32) 是
+                                -- (i32, String) 不是
+
+
+6. 所有權 與 函式
+    
+    6-1. 將值傳遞給函式 和 把值賦值變數 是類似的
+                -- 將值傳遞給函式，將會發生移動或者複製
+                
+                示例:
+                        1 | fn main() {
+                        2 |     let s1 = String::from("hello");   // 進入 s1 的 scope
+                        3 |     take_ownership(s1);   // s1 的所有權移動到 take_ownership() 內
+                        4 | }
+                        5 | 
+                        6 | fn take_ownership(str: String) {
+                        7 |     println!("{}", str);
+                        8 | }   // str 的 scope 結束
+
+    6-2. 返回值 與 作用域
+            6-2-1. 當函式在返回值的過程中，同樣也會發生所有權轉移
+            6-2-2. 一個變數的所有權總是遵循同樣的方式
+                        1. 把一個值賦值給其他變數會發生移動
+                        2. 當一個含有 Heap 資料的變數離開作用域時，它的值就會被調用的 drop 函式清理掉，
+                                除非資料的所有權被轉移到另一個變數上
+
+                示例:
+                        1 | fn give_ownership() -> String {
+                        2 |     let s = String::from("hello");
+                        3 |     s
+                        4 | }
+                        5 | 
+                        6 | fn takes_and_give(str: String) -> String {
+                        7 |     str
+                        8 | }
+                        9 | 
+                       10 | fn main() {
+                       11 |     let s1 = give_ownership();   // give_ownership() 的內部，s 的所有權移動到 s1
+                       12 |     let s2 = takes_and_give(s1);   // s1 又移動到 s2
+                       13 | }
+
+    6-3. 如何讓函式使用數值時，但不會獲得其所有權
+                -- 參考 與 借用 (Reference and Borrowing)
+                                        -- by 第 7 條
+
+
+7. 參考 與 借用 (Reference and Borrowing)
+
+    7-1. 函式的參數使用 & 符號
+    7-2. & 符號是代表: 參考 (Reference)，它就是允許使用傳入的數值，且不取得其所有權
+    7-3. 借用 (Borrowing) 與 不可變參考 (immutable Reference):
+                7-3-1. 當把參考 (Reference) 作為函式參數，這個行為叫做借用 (Borrowing)
+                7-3-2. 和宣告變數時一樣，在預設的情況下，引用是不可變的
+                        -- 1. 因此預設是不可修改借用 (Borrowing) 的值
+                        -- 2. 若要修改借用 (Borrowing) 的值，則是宣告第二種參考
+                                        -- 可變參考 (mutable Reference)
+
+                示例:
+                        1 | fn main() {
+                        2 |     let s = String::from("hello");
+                        3 |     let s_len = get_string_len(s);
+                        4 | }
+                        5 | 
+                        6 | fn get_string_len(str: &String) -> usize {
+                        7 |     // str.push_str(", world");   // 這邊會報錯，得必須是可變參考
+                        8 |     str.len()
+                        9 | }
+
+                圖示:
+                              s                   "s1"                 * Heap 上的資料 *
+                        | name  |val|       | name     |val|           | index | val |
+                        |-------|---|       |----------|---|           |-------|-----|
+                        | ptr   |---|------>| ptr      | --|---------> |   0   |  h  |
+                        |-------|---|       |----------|---|           |-------|-----|
+                                            | len      | 5 |           |   1   |  o  |
+                                            |----------|---|           |-------|-----|
+                                            | capacity | 5 |           |   2   |  l  |
+                                            |----------|---|           |-------|-----|
+                                                                       |   3   |  l  |
+                                                                       |-------|-----|
+                                                                       |   4   |  o  |
+                                                                       |-------|-----|
+
+    7-4. 可變參考 (mutable Reference)
+                7-4-1. 可變參考: 在 & 符號後面加上 mut 關鍵字
+                7-4-2. 限制: 
+                            1. 可變參考有一個重要限制，在特定的 scope 內，
+                                對於某一塊的資料，只能有一個可變參考
+                                        -- 這樣限制的好處是在編譯時，防止數據競爭
+                            
+                            2. 不可變參考與可變參考，不能同時存在同一個 scope，
+                                        但不可變參考，可以同時存在
+
+                7-4-3. 可以透過 "創建新的 scope"，來允許非同時的創建多個可變參考
+
+                ** 數據競爭，在滿以下 3 個條件，可能會發生 **
+                        1. 兩個或多個以上的指標，同時訪問同一個資料
+                        2. 至少有一個指標用於寫入資料
+                        3. 沒有使用任何機制，來同步對資料的訪問
+
+                示例 1: 宣告 & 使用可變參考
+
+                        1 | fn main() {
+                        2 |     let mut s = String::from("hello");
+                        3 |     let s_len = get_string_len(&mut s);
+                        4 | }
+                        5 | 
+                        6 | fn get_string_len(str: &mut String) -> usize {
+                        7 |     str.push_str(", world");
+                        8 |     str.len()
+                        9 | }
+
+                示例 2: 非同時的創建多個可變參考
+
+                        1 | fn main() {
+                        2 |     let mut s = String::from("hello");
+                        3 |     {
+                        4 |         // 由於創建新的 scope，因此可以再創建一個可變參考
+                        5 |         let s1 = &mut s;
+                        6 |     }
+                        7 | 
+                        8 |     let s2 = &mut s;
+                        9 | }
+
+                示例 3: 不可變參考與可變參考，不能同時存在; 但不可變參考，可以同時存在
+
+                        1 | fn main() {
+                        2 |     let mut s = String::from("hello");
+                        3 |     let r1 = &s;   // 沒問題
+                        4 |     let r2 = &s;   // 沒問題
+                        5 |     let r3 = &mut s;   // 很有問題，出事了!
+                        6 | }
+
+    7-5. 迷途參考/懸空引用 (Dangling Reference)
+                7-5-1. 懸空指標 (Dangling Pointer):
+                                -- 一個指標指向了記憶體中的某個地址，而這個
+                                地址可能已經被釋放掉，並分配給其他程序使用了
+
+                7-5-2. 在 Rust 編譯時，可保證該變數參考，永遠都不是迷途參考，
+                        如果使用某些資料的參考，而編譯器會確保該資料，
+                        不會在參考結束前，離開作用域 (scope)
+
+                示例:
+                        1 | fn main() {
+                        2 |     let s = dangling();
+                        3 | }
+                        4 | 
+                        5 | fn dangling() -> &String {
+                        6 |     let s = String::from("hello");
+                        7 |     &s
+                        8 | }
+
+    7-6. 參考的規則
+                1. 在任何給定的時候，只能滿足下列的條件之一
+                        -- 一個可變參考
+                        -- 任意數量的不可變參考
+                
+                2. 參考必須一直有效
 
 
